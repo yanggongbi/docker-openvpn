@@ -2,7 +2,13 @@
 
 OpenVPN server in a Docker container complete with an EasyRSA PKI CA.
 
-Extensively tested on [Digital Ocean](https://www.digitalocean.com/?refcode=d19f7fe88c94).
+Extensively tested on [Digital Ocean $5/mo node](http://bit.ly/1C7cKr3) and has
+a corresponding [Digital Ocean Community Tutorial](http://bit.ly/1AGUZkq).
+
+Upstream links:
+
+* Docker Registry @ [kylemanna/openvpn](https://registry.hub.docker.com/u/kylemanna/openvpn)
+* GitHub @ [kylemanna/docker-openvpn](https://github.com/kylemanna/docker-openvpn)
 
 ## Quick Start
 
@@ -10,9 +16,9 @@ Extensively tested on [Digital Ocean](https://www.digitalocean.com/?refcode=d19f
 
         docker run --name $OVPN_DATA -v /etc/openvpn busybox
 
-* Initalize the `$OVPN_DATA` container that will hold the configuration files and certificates
+* Initialize the `$OVPN_DATA` container that will hold the configuration files and certificates
 
-        docker run --volumes-from $OVPN_DATA --rm kylemanna/openvpn ovpn_genconfig -u udp://VPN.SERVERNAME.COM:1194
+        docker run --volumes-from $OVPN_DATA --rm kylemanna/openvpn ovpn_genconfig -u udp://VPN.SERVERNAME.COM
         docker run --volumes-from $OVPN_DATA --rm -it kylemanna/openvpn ovpn_initpki
 
 * Start OpenVPN server process
@@ -21,7 +27,7 @@ Extensively tested on [Digital Ocean](https://www.digitalocean.com/?refcode=d19f
 
             docker run --volumes-from $OVPN_DATA -d -p 1194:1194/udp --cap-add=NET_ADMIN kylemanna/openvpn
 
-    - On Docker older than 1.2 version
+    - On Docker older than version 1.2
 
             docker run --volumes-from $OVPN_DATA -d -p 1194:1194/udp --privileged kylemanna/openvpn
 
@@ -107,6 +113,33 @@ packets, etc).
 * Assuming the rest of the Docker container's filesystem is secure, TLS + PKI
   security should prevent any malicious host from using the VPN.
 
+
+## Benefits of Running Inside a Docker Container
+
+### The Entire Daemon and Dependencies are in the Docker Image
+
+This means that it will function correctly (after Docker itself is setup) on
+all distributions Linux distributions such as: Ubuntu, Arch, Debian, Fedora,
+etc.  Furthermore, an old stable server can run a bleeding edge OpenVPN server
+without having to install/muck with library dependencies (i.e. run latest
+OpenVPN with latest OpenSSL on Ubuntu 12.04 LTS).
+
+### It Doesn't Stomp All Over the Server's Filesystem
+
+Everything for the Docker container is contained in two images: the ephemeral
+run time image (kylemanna/openvpn) and the data image (using busybox as a
+base).  To remove it, remove the two Docker images and corresponding containers
+and it's all gone.  This also makes it easier to run multiple servers since
+each lives in the bubble of the container (of course multiple IPs or separate
+ports are needed to communicate with the world).
+
+### Some (arguable) Security Benefits
+
+At the simplest level compromising the container may prevent additional
+compromise of the server.  There are many arguments surrounding this, but the
+take away is that it certainly makes it more difficult to break out of the
+container.  People are actively working on Linux containers to make this more
+of a guarantee in the future.
 
 ## Differences from jpetazzo/dockvpn
 
